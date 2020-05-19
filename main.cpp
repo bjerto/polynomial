@@ -22,11 +22,13 @@ public:
     void addLastMonom(double c, int r);
     void print();
 
-    Polynomial operator +=(const Polynomial& m); //slozhenie monomov
-    Polynomial operator *(const Polynomial& m); // umnozhenie
-    Polynomial operator *(int number); //umnozhenie na chislo
+    Polynomial operator *(int number) const; //umnozhenie na chislo
+    Polynomial operator +(const Polynomial& m) const; //slozhenie monomov
+    Polynomial operator -(const Polynomial& m) const; // vichitanie
 
-    Polynomial operator -(const Polynomial& m); // vichitanie
+    double operator ()(double x) const;
+
+    Polynomial operator *(const Polynomial& m) const; // umnozhenie
 private:
     monomial* head;
     double epsilon = 0.000001;
@@ -52,19 +54,23 @@ void Polynomial::addLastMonom(double c, int r){
     }
 }
 
-Polynomial Polynomial::operator +=(const Polynomial&  m) {
+Polynomial Polynomial::operator+(const Polynomial &m) const{
     if (m.head == nullptr)
-        return *this;
+        return *(new Polynomial(*this));
     if (this->head == nullptr)
-        return m;
+        return *(new Polynomial(m));
 
+    Polynomial* result = new Polynomial();
     monomial* currentMon1 = this->head;
     monomial* currentMon2 = m.head;
     while (currentMon1 != nullptr && currentMon2 != nullptr)
     {
+        double coeff = 0.0;
+        int rank = 0;
         if (currentMon1->rank == currentMon2->rank)
         {
-            currentMon1->coeff += currentMon2->coeff;
+            coeff = currentMon2->coeff + currentMon1->coeff;
+            rank = currentMon1->rank;
             currentMon1 = currentMon1->next;
             currentMon2 = currentMon2->next;
         }
@@ -72,60 +78,42 @@ Polynomial Polynomial::operator +=(const Polynomial&  m) {
         {
             if (currentMon1->rank > currentMon2->rank)
             {
-                monomial *new_mon = new monomial(currentMon2);
-                new_mon->next = currentMon1->next;
-                currentMon1->next = new_mon;
-                currentMon1 = new_mon->next;
+                coeff = currentMon1->coeff;
+                rank = currentMon1->rank;
+                currentMon1 = currentMon1->next;
             }
             else
             {
-                monomial *new_mon = new monomial(currentMon1);
-                new_mon->next = currentMon2->next;
-                currentMon2->next = new_mon;
-                currentMon1 = new_mon->next;
+                coeff = currentMon2->coeff;
+                rank = currentMon2->rank;
+                currentMon2 = currentMon2->next;
             }
         }
+        result->addLastMonom(coeff, rank);
     }
-    return *this;
+    return *result;
 }
 
-Polynomial Polynomial::operator -(const Polynomial &m) {
-    if (m.head == nullptr)
-        return *this;
-    if (this->head == nullptr)
-        return m;
-    monomial* currentMon1 = this->head;
-    monomial* currentMon2 = m.head;
-    while (currentMon1 != nullptr && currentMon2 != nullptr)
-    {
-        if (currentMon1->rank == currentMon2->rank)
-        {
-            currentMon1->coeff -= currentMon2->coeff;
-            currentMon1 = currentMon1->next;
-            currentMon2 = currentMon2->next;
-        }
-        else {
-            if (currentMon1->rank > currentMon2->rank)
-                currentMon1 = currentMon1->next;
-            else
-                currentMon2 = currentMon2->next;
-        }
-
-    }
-    return *this;
-
+Polynomial Polynomial::operator -(const Polynomial &m) const{
+    return *this + m * (-1);
 }
-Polynomial Polynomial::operator*(int number) {
-    monomial* currentMonom = this->head;
-    while (currentMonom != nullptr)
-    {
-        currentMonom->coeff *= number;
-        currentMonom = currentMonom->next;
-    }
-    return *this;
+
+Polynomial Polynomial::operator*(int number) const {
+    Polynomial* result = new Polynomial();
+
+    if (this->head != nullptr)
+        for (monomial* currentMon = this->head; currentMon != nullptr; currentMon = currentMon->next)
+            result->addLastMonom(currentMon->coeff * number, currentMon->rank);
+
+    return *result;
 }
 
 void Polynomial::print() {
+    if (this->head == nullptr)
+    {
+        cout << 0;
+        return;
+    }
     cout << this->head->coeff << "x^" << this->head->rank;
     monomial* temp = this->head->next;
     while(temp != nullptr)
@@ -137,22 +125,32 @@ void Polynomial::print() {
 
 
 int main() {
-    Polynomial pol = Polynomial();
-    pol.addLastMonom(1, 1);
-    pol.addLastMonom(2, 2);
-    pol.addLastMonom(4, 4);
+    /*Polynomial pol = Polynomial();
     pol.addLastMonom(11, 11);
+    pol.addLastMonom(4, 4);
+    pol.addLastMonom(2, 2);
+    pol.addLastMonom(1, 1);
     pol.print();
     cout << endl;
     Polynomial pol2 = Polynomial();
-    pol2.addLastMonom(3, 1);
-    pol2.addLastMonom(3, 3);
-    pol2.addLastMonom(-1, 4);
     pol2.addLastMonom(9, 9);
+    pol2.addLastMonom(-1, 4);
+    pol2.addLastMonom(3, 3);
+    pol2.addLastMonom(3, 1);
     pol2.print();
     cout << endl;
     cout << endl;
-    pol += pol2;
+    Polynomial pol3 = pol + pol2;
+    pol3.print();*/
+    Polynomial pol = Polynomial();
+    pol.addLastMonom(11, 11);
+    pol.addLastMonom(4, 4);
+    pol.addLastMonom(2, 2);
+    pol.addLastMonom(1, 1);
+    Polynomial pol1 = pol;
+    pol = pol * 2;
     pol.print();
+    cout << endl;
+    pol1.print();
     return 0;
 }
